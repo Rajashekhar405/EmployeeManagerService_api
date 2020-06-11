@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.Exception.RecordNotFoundException;
+import com.example.demo.Exception.CustomException;
 import com.example.demo.entity.Employee;
 import com.example.demo.repository.EmployeeRepository;
 
@@ -19,64 +22,77 @@ public class EmployeeService {
 	@Autowired
 	private EmployeeRepository employeeRepository;
 
-	public List<Employee> getAllEmployee() {
-		try {
-			return employeeRepository.findAll();
-		} catch (Exception e) {
-			return new ArrayList<Employee>();
+	public List<Employee> getAllEmployee() throws CustomException{
+		List<Employee> empList = employeeRepository.findAll();
+		if(null!=empList && !empList.isEmpty()) {
+			return  empList;
+		}else {
+			throw new CustomException("No Records Found");
 		}
 	}
 
-	public Employee getEmployeeById(int id) {
+	public Employee getEmployeeById(int id) throws CustomException {
 		Optional<Employee> emp =  employeeRepository.findById(id);
 		if(emp.isPresent()) {
-			Employee empp = emp.get();
-			return empp;
+			return emp.get();
 		}else {
-			return new Employee();
+			throw new CustomException("Entered Employee"+id+"not found");
 		}
 	}
 
 	public Employee createEmployee(Employee emp) {
-			Employee emp1 = employeeRepository.save(emp);
-			return emp1;
+		Employee emp1 = employeeRepository.save(emp);
+		return emp1;
 	}
 
-	public Employee UpdateEmployee(Employee emp) {
+	public Employee UpdateEmployee(Employee emp) throws CustomException{
 		Optional<Employee> empDetails = employeeRepository.findById(emp.getId());
-			Employee employee = empDetails.get();
-			employee.setDesignation(emp.getDesignation());
-			employee.seteBand(emp.geteBand());
-			employee.seteName(emp.geteName());
-			employee.setExperience(emp.getExperience());
-			return employeeRepository.save(employee);
+		Employee employee = empDetails.get();
+		employee.setDesignation(emp.getDesignation());
+		employee.seteBand(emp.geteBand());
+		employee.seteName(emp.geteName());
+		employee.setExperience(emp.getExperience());
+		return employeeRepository.save(employee);
 	}
 
-	public Optional<Employee> deleteEmployeeById(int id) {
-		Optional<Employee> emp1 = null;
-		try {
-			emp1 = employeeRepository.findById(id);
-			if(null!=emp1 && emp1.isPresent()) 
-	        {
-				employeeRepository.deleteById(id);
-				return emp1;
-	        } else {
-	            throw new RecordNotFoundException("No employee record exist for given id");
-	        }
-		} catch (Exception e) {
-			e.printStackTrace();
+	public Optional<Employee> deleteEmployeeById(int id) throws CustomException {
+		Optional<Employee> emp1 = employeeRepository.findById(id);
+		if(null!=emp1 && emp1.isPresent()) 
+		{
+			employeeRepository.deleteById(id);
+		} else {
+			new CustomException("Employee ID Does Not Exist"+id);
 		}
 		return emp1;
-		
 	}
 
-	public ResponseEntity<String> deleteEmployees() {
+	public String deleteEmployees() throws CustomException{
 		try {
 			employeeRepository.deleteAll();
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		} catch (Exception e) {
-			return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+			throw new CustomException("While Deleting, Something Went wrong");
 		}
+		return "Deleted All the records";
+	}
+
+	public List<?> groupByEmployees() throws CustomException {
+		return employeeRepository.groupByEmployees();
+
+	}
+
+	public List<Employee> getEmployeePerPage(Integer pageNo, Integer pageSize, String sortBy) throws CustomException{
+		PageRequest pageable = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
+		Page<Employee> pageReslt = employeeRepository.findAll(pageable);
+		System.out.println(pageReslt.getTotalElements());
+		if(pageReslt.hasContent()) {
+			return pageReslt.getContent();
+		}else{
+			return new ArrayList<Employee>();
+		}
+	}
+
+	public List<Employee> getByEmployeeDesignation(String desig) throws CustomException {
+		return employeeRepository.findByDesignation(desig);
 	}
 
 }

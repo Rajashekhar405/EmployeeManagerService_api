@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.example.demo.Exception.CustomException;
 import com.example.demo.entity.Employee;
 import com.example.demo.service.EmployeeService;
-import com.example.demo.service.RecordNotFoundException;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -101,5 +100,17 @@ public class EmployeeController {
 		List<Employee> employee = employeeService.getByEmployeeDesignation(desig);
 		return new ResponseEntity<List<Employee>>(employee, new HttpHeaders(), HttpStatus.OK);
 
+	}
+	
+	@PostMapping("/bulksaving")
+	public ResponseEntity<List<Employee>> createEmployeeInBulk(@RequestBody List<Employee> emplst) {
+		List<Employee> emplist = null;
+			emplist = employeeService.createEmployeeInBulk(emplst);
+			if(null!=emplist && emplist.isEmpty()) {
+				return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.OK);
+			}else {
+				return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.EXPECTATION_FAILED);
+			}
+		//return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.OK);
 	}
 }

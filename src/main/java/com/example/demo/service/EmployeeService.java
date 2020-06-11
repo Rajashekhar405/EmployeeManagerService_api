@@ -94,5 +94,9 @@ public class EmployeeService {
 	public List<Employee> getByEmployeeDesignation(String desig) throws CustomException {
 		return employeeRepository.findByDesignation(desig);
 	}
+	
+	public List<Employee> createEmployeeInBulk(List<Employee> emplst){
+		return employeeRepository.saveAll(emplst);
+	}
 
 }

@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.Exception.CustomException;
@@ -22,22 +20,26 @@ public class EmployeeService {
 	@Autowired
 	private EmployeeRepository employeeRepository;
 
-	public List<Employee> getAllEmployee() throws CustomException{
-		List<Employee> empList = employeeRepository.findAll();
+	public List<Employee> getAllEmployee(Integer pageNo, Integer pageSize, String sortBy) throws CustomException{
+		/*List<Employee> empList = employeeRepository.findAll();
 		if(null!=empList && !empList.isEmpty()) {
 			return  empList;
 		}else {
 			throw new CustomException("No Records Found");
+		}*/
+		PageRequest pageable = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
+		Page<Employee> pageReslt = employeeRepository.findAll(pageable);
+		System.out.println(pageReslt.getTotalElements());
+		if(pageReslt.hasContent()) {
+			return pageReslt.getContent();
+		}else{
+			return new ArrayList<Employee>();
 		}
 	}
 
 	public Employee getEmployeeById(int id) throws CustomException {
 		Optional<Employee> emp =  employeeRepository.findById(id);
-		if(emp.isPresent()) {
-			return emp.get();
-		}else {
-			throw new CustomException("Entered Employee"+id+"not found");
-		}
+		return emp.get();
 	}
 
 	public Employee createEmployee(Employee emp) {
@@ -49,8 +51,8 @@ public class EmployeeService {
 		Optional<Employee> empDetails = employeeRepository.findById(emp.getId());
 		Employee employee = empDetails.get();
 		employee.setDesignation(emp.getDesignation());
-		employee.seteBand(emp.geteBand());
-		employee.seteName(emp.geteName());
+		employee.setBand(emp.getBand());
+		employee.setFirstName(emp.getFirstName());
 		employee.setExperience(emp.getExperience());
 		return employeeRepository.save(employee);
 	}
@@ -94,9 +96,13 @@ public class EmployeeService {
 	public List<Employee> getByEmployeeDesignation(String desig) throws CustomException {
 		return employeeRepository.findByDesignation(desig);
 	}
-	
+
 	public List<Employee> createEmployeeInBulk(List<Employee> emplst){
 		return employeeRepository.saveAll(emplst);
+	}
+	
+	public List<?> findEmployeeDetails(String keyword) {
+		return employeeRepository.findUsersByKeyword(keyword);
 	}
 
 }

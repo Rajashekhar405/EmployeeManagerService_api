@@ -3,6 +3,8 @@ package com.example.demo.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,80 +31,119 @@ import io.swagger.annotations.ApiOperation;
 @RestControllerAdvice
 public class EmployeeController {
 
+	private static final Logger LOGGER=LoggerFactory.getLogger(EmployeeController.class);
+
 	@Autowired
 	private EmployeeService employeeService;
 
+	@SuppressWarnings("unchecked")
+	@GetMapping("/{searchkey}")
+	@ApiOperation("app common search")
+	public List<Employee> findEmployeeDetails(@PathVariable("searchkey") String searchkey) {
+		LOGGER.info("Inside findEmployeeDetails " + searchkey);
+		return (List<Employee>) employeeService.findEmployeeDetails(searchkey);
+	}
+
 	@GetMapping
 	@ApiOperation(value = "Get All Employees List")
-	public ResponseEntity<List<Employee>> getAllEmployee() throws CustomException{
-		List<Employee> empList = employeeService.getAllEmployee();
+	public ResponseEntity<List<Employee>> getAllEmployee(@RequestParam(defaultValue = "0") Integer pageNo, 
+			@RequestParam(defaultValue = "1000", required = false) Integer pageSize,
+			@RequestParam(defaultValue = "id") String sortBy) throws CustomException{
+		LOGGER.debug("************Inside getAllEmployee... ****" + sortBy);
+		List<Employee> empList = employeeService.getAllEmployee(pageNo, pageSize, sortBy);
+		LOGGER.info("Employee Rsponse=== " + empList.toString());
 		return new ResponseEntity<>(empList, new HttpHeaders(), HttpStatus.OK);
 	}
 
-	@GetMapping("/{id}")
-	@ApiOperation(value = "Get Employee By EmployeeID")
-	public ResponseEntity<Employee> getEmployeeById(@PathVariable int id) throws CustomException {
-		Employee employee = employeeService.getEmployeeById(id);
-		return new ResponseEntity<Employee>(employee, new HttpHeaders(), HttpStatus.OK);
-	}
-
 	@PostMapping
-	@ApiOperation(value = "Creating new Employee")
-	public ResponseEntity<Employee> createEmployee(@RequestBody Employee emp) throws CustomException {
-		Employee updated = employeeService.createEmployee(emp);
-		return new ResponseEntity<Employee>(updated, new HttpHeaders(), HttpStatus.OK);
+	@ApiOperation(value = "Creating new Employee/s")
+	public ResponseEntity<List<Employee>> createEmployeeInBulk(@RequestBody List<Employee> emplst) {
+		LOGGER.debug("############ Inside createEmployeeInBulk########## " + emplst);
+		List<Employee> emplist = null;
+		emplist = employeeService.createEmployeeInBulk(emplst);
+		if(null!=emplist && emplist.isEmpty()) {
+			return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.OK);
+		}else {
+			LOGGER.error("Exception occured while creating employee/s");
+			return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.EXPECTATION_FAILED);
+		}
 	}
 
 	@PutMapping("/{id}")
 	@ApiOperation(value = "Updating Employee Based on EmployeeID")
 	public ResponseEntity<Object> updateEmployee(@PathVariable("id") int id, @RequestBody Employee emp) throws CustomException {
 		employeeService.UpdateEmployee(emp);
+		LOGGER.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATED SUCCESSFULLY~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// return new ResponseEntity<Employee>(updated, new HttpHeaders(), HttpStatus.OK);
-		return new ResponseEntity<>("Product is updated successfully", HttpStatus.OK);
+		return new ResponseEntity<>("Employee is updated successfully", HttpStatus.OK);
 	}
 
 	@DeleteMapping("/{id}") 
 	@ApiOperation(value = "Deleting Employee Based on EmployeeID")
-	public ResponseEntity<Employee> deleteEmployeeById(@PathVariable int id) throws CustomException {
+	public ResponseEntity<Object> deleteEmployeeById(@PathVariable int id) throws CustomException {
 		Optional<Employee> emp = employeeService.deleteEmployeeById(id);
 		if(emp.isPresent() && null!=emp) {
-		return new ResponseEntity<Employee>(emp.get(), new HttpHeaders(), HttpStatus.OK);
+			LOGGER.debug("Employee list is " + emp);
+			//return new ResponseEntity<Employee>(emp.get(), new HttpHeaders(), HttpStatus.OK);
+			return new ResponseEntity<>("Deleted Employee successsfully", HttpStatus.OK);
 		}else {
+			LOGGER.debug("Employee List is empty"+ emp.get());
 			return new ResponseEntity<>(null, new HttpHeaders(), HttpStatus.NOT_FOUND);
 		}
 	}
 
-	@DeleteMapping
+	/*@DeleteMapping
 	@ApiOperation(value = "Deleting All Employee")
-	public HttpStatus deleteEmployees() {
+	public ResponseEntity<Object> deleteEmployees() {
 		employeeService.deleteEmployees();
-		return HttpStatus.OK;
-	}
+		return new ResponseEntity<>("Deleted All the Employees successsfully", HttpStatus.OK);
+	}*/
 
+	/*@GetMapping("/{id}")
+	@ApiOperation(value = "Get Employee By EmployeeID")
+	public ResponseEntity<Employee> getEmployeeById(@PathVariable int id) throws RecordNotFoundException {
+		Employee employee = employeeService.getEmployeeById(id);
+		if(employee ==null) {
+			throw new RecordNotFoundException("Employee id not found"+ id);
+		}
+		return new ResponseEntity<Employee>(employee, new HttpHeaders(), HttpStatus.OK);
+	}*/
+
+	/*@PostMapping
+	@ApiOperation(value = "Creating new Employee")
+	public ResponseEntity<Employee> createEmployee(@Valid @RequestBody Employee emp) throws CustomException {
+		if(StringUtils.isBlank(emp.getFirstName())) {
+			throw new InvalidFiledException("Employee Name is required");
+		}
+		Employee updated = employeeService.createEmployee(emp);
+		return new ResponseEntity<Employee>(updated, new HttpHeaders(), HttpStatus.OK);
+	}
+	 */
 	@SuppressWarnings("unchecked")
 	@GetMapping("/groupby")
 	public List<Employee> getGroupByEmployees() throws CustomException {
 		return (List<Employee>) employeeService.groupByEmployees();
 	}
 
-	@GetMapping("/pagination")
+	/*@GetMapping("/pagination")
 	@ApiOperation(value = "Get Employees by No of Records and sorting order per page")
 	public ResponseEntity<List<Employee>> getEmployeePerPage(@RequestParam(defaultValue = "0") Integer pageNo, 
 			@RequestParam(defaultValue = "5") Integer pageSize,
 			@RequestParam(defaultValue = "id") String sortBy) {
 		List<Employee> empList = employeeService.getEmployeePerPage(pageNo, pageSize, sortBy);
 		return new ResponseEntity<>(empList, new HttpHeaders(), HttpStatus.OK);
-	}
+	}*/
 
-	@ApiOperation(value = "Getting employee details by employee designation")
+	/*@ApiOperation(value = "Getting employee details by employee designation")
 	@GetMapping("employee/{desig}")
 	public ResponseEntity<List<Employee>> getByEmployeeDesignation(@PathVariable("desig") String desig) throws CustomException {
 		List<Employee> employee = employeeService.getByEmployeeDesignation(desig);
 		return new ResponseEntity<List<Employee>>(employee, new HttpHeaders(), HttpStatus.OK);
 
 	}
-	
-	@PostMapping("/bulksaving")
+
+	@PostMapping
+	@ApiOperation(value = "Creating new Employee/s")
 	public ResponseEntity<List<Employee>> createEmployeeInBulk(@RequestBody List<Employee> emplst) {
 		List<Employee> emplist = null;
 			emplist = employeeService.createEmployeeInBulk(emplst);
@@ -111,6 +152,10 @@ public class EmployeeController {
 			}else {
 				return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.EXPECTATION_FAILED);
 			}
-		//return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.OK);
-	}
+	}*/
+
+	/*@ExceptionHandler
+	public String handleInvalidFiledException(InvalidFileNameException exception) {
+		return exception.getMessage();
+	}*/
 }

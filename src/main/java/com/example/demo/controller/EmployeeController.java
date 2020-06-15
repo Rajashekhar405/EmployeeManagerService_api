@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.demo.Exception.CustomException;
+import com.example.demo.Exception.RecordNotFoundException;
 import com.example.demo.entity.Employee;
 import com.example.demo.service.EmployeeService;
 
@@ -38,10 +39,14 @@ public class EmployeeController {
 
 	@SuppressWarnings("unchecked")
 	@GetMapping("/{searchkey}")
-	@ApiOperation("app common search")
-	public List<Employee> findEmployeeDetails(@PathVariable("searchkey") String searchkey) {
+	@ApiOperation("common search")
+	public ResponseEntity<List<Employee>> findEmployeeDetails(@PathVariable("searchkey") String searchkey) throws RecordNotFoundException{
 		LOGGER.info("Inside findEmployeeDetails " + searchkey);
-		return (List<Employee>) employeeService.findEmployeeDetails(searchkey);
+		List<Employee> employeeList =  (List<Employee>) employeeService.findEmployeeDetails(searchkey);
+		if(!employeeList.isEmpty()) {
+			return new ResponseEntity<List<Employee>>(employeeList, HttpStatus.OK);
+		}
+		return new ResponseEntity<List<Employee>>(HttpStatus.NOT_FOUND);
 	}
 
 	@GetMapping
@@ -52,7 +57,11 @@ public class EmployeeController {
 		LOGGER.debug("************Inside getAllEmployee... ****" + sortBy);
 		List<Employee> empList = employeeService.getAllEmployee(pageNo, pageSize, sortBy);
 		LOGGER.info("Employee Rsponse=== " + empList.toString());
-		return new ResponseEntity<>(empList, new HttpHeaders(), HttpStatus.OK);
+		if(null!=empList && !empList.isEmpty()) {
+			return new ResponseEntity<>(empList, new HttpHeaders(), HttpStatus.OK);
+		}else {
+			return new ResponseEntity<>( HttpStatus.NOT_FOUND);
+		}
 	}
 
 	@PostMapping
@@ -65,7 +74,7 @@ public class EmployeeController {
 			return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.OK);
 		}else {
 			LOGGER.error("Exception occured while creating employee/s");
-			return new ResponseEntity<List<Employee>>(emplist, new HttpHeaders(), HttpStatus.EXPECTATION_FAILED);
+			return new ResponseEntity<List<Employee>>(null, new HttpHeaders(), HttpStatus.EXPECTATION_FAILED);
 		}
 	}
 
@@ -83,7 +92,7 @@ public class EmployeeController {
 	public ResponseEntity<Object> deleteEmployeeById(@PathVariable int id) throws CustomException {
 		Optional<Employee> emp = employeeService.deleteEmployeeById(id);
 		if(emp.isPresent() && null!=emp) {
-			LOGGER.debug("Employee list is " + emp);
+			LOGGER.debug("!!!!!!! Employee list is !!!!!!!!" + emp);
 			//return new ResponseEntity<Employee>(emp.get(), new HttpHeaders(), HttpStatus.OK);
 			return new ResponseEntity<>("Deleted Employee successsfully", HttpStatus.OK);
 		}else {

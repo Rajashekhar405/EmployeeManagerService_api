@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +19,8 @@ import com.example.demo.repository.EmployeeRepository;
 @Service
 public class EmployeeService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(EmployeeService.class);
+	
 	@Autowired
 	private EmployeeRepository employeeRepository;
 
@@ -27,18 +31,22 @@ public class EmployeeService {
 		}else {
 			throw new CustomException("No Records Found");
 		}*/
+		LOGGER.info("Inside employeeService getAllEmployee " + pageNo+","+pageSize+","+sortBy);
 		PageRequest pageable = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
 		Page<Employee> pageReslt = employeeRepository.findAll(pageable);
-		System.out.println(pageReslt.getTotalElements());
+		LOGGER.info("Total Number of records "+pageReslt.getTotalElements());
 		if(pageReslt.hasContent()) {
 			return pageReslt.getContent();
 		}else{
+			LOGGER.info("No Record Found Return default employee list");
 			return new ArrayList<Employee>();
 		}
 	}
 
 	public Employee getEmployeeById(int id) throws CustomException {
+		LOGGER.info("Inside getEmployeeById "+ id);
 		Optional<Employee> emp =  employeeRepository.findById(id);
+		LOGGER.debug("Employee details " + emp.get());
 		return emp.get();
 	}
 
@@ -98,10 +106,12 @@ public class EmployeeService {
 	}
 
 	public List<Employee> createEmployeeInBulk(List<Employee> emplst){
+		LOGGER.info("Inside createEmployeeInBulk "+emplst.size());
 		return employeeRepository.saveAll(emplst);
 	}
 	
 	public List<?> findEmployeeDetails(String keyword) {
+		LOGGER.info("Entered search keyword = "+keyword);
 		return employeeRepository.findUsersByKeyword(keyword);
 	}
 

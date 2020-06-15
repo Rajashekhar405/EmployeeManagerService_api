@@ -27,6 +27,8 @@ import com.example.demo.service.EmployeeService;
 
 import io.swagger.annotations.ApiOperation;
 
+
+
 @RestController
 @RequestMapping("/employees")
 @RestControllerAdvice
@@ -36,6 +38,14 @@ public class EmployeeController {
 
 	@Autowired
 	private EmployeeService employeeService;
+	
+	public EmployeeService getEmployeeService() {
+		return employeeService;
+	}
+
+	public void setEmployeeService(EmployeeService employeeService) {
+		this.employeeService = employeeService;
+	}
 
 	@SuppressWarnings("unchecked")
 	@GetMapping("/{searchkey}")
@@ -45,8 +55,9 @@ public class EmployeeController {
 		List<Employee> employeeList =  (List<Employee>) employeeService.findEmployeeDetails(searchkey);
 		if(!employeeList.isEmpty()) {
 			return new ResponseEntity<List<Employee>>(employeeList, HttpStatus.OK);
+		}else {
+			return new ResponseEntity<List<Employee>>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<List<Employee>>(HttpStatus.NOT_FOUND);
 	}
 
 	@GetMapping

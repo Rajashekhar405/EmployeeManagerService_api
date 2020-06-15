@@ -12,6 +12,11 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.DynamicUpdate;
 
+/*
+ * @author Rajashekhar Badad
+ * @version 1.1 or %I%
+ * @since 1.0
+ * */
 
 @Entity
 @DynamicUpdate(value = true)

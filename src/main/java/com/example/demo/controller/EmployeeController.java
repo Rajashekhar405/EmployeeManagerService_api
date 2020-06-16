@@ -28,6 +28,12 @@ import com.example.demo.service.EmployeeService;
 import io.swagger.annotations.ApiOperation;
 
 
+/**
+ * 
+ * @author Rajashekhar badad
+ * @version 1.0
+ * @since 05-06-2020
+ */
 
 @RestController
 @RequestMapping("/employees")
@@ -39,32 +45,43 @@ public class EmployeeController {
 	@Autowired
 	private EmployeeService employeeService;
 	
-	public EmployeeService getEmployeeService() {
-		return employeeService;
-	}
-
-	public void setEmployeeService(EmployeeService employeeService) {
-		this.employeeService = employeeService;
-	}
+	/**
+	 * 
+	 * @param searchkey
+	 * @return Employee List
+	 * @throws RecordNotFoundException
+	 */
 
 	@SuppressWarnings("unchecked")
 	@GetMapping("/{searchkey}")
 	@ApiOperation("common search")
 	public ResponseEntity<List<Employee>> findEmployeeDetails(@PathVariable("searchkey") String searchkey) throws RecordNotFoundException{
 		LOGGER.info("Inside findEmployeeDetails " + searchkey);
-		List<Employee> employeeList =  (List<Employee>) employeeService.findEmployeeDetails(searchkey);
-		if(!employeeList.isEmpty()) {
-			return new ResponseEntity<List<Employee>>(employeeList, HttpStatus.OK);
-		}else {
-			return new ResponseEntity<List<Employee>>(HttpStatus.NOT_FOUND);
+		if(null!=searchkey) {
+			List<Employee> employeeList =  (List<Employee>) employeeService.findEmployeeDetails(searchkey);
+			if(!employeeList.isEmpty()) {
+				return new ResponseEntity<List<Employee>>(employeeList, HttpStatus.OK);
+			}else {
+				return new ResponseEntity<List<Employee>>(HttpStatus.NOT_FOUND);
+			}
+		}
+		else {
+			throw new NullPointerException();
 		}
 	}
+	
+	/**
+	 * 
+	 * @param pageNo, pageSize, sortBy
+	 * @return Employee List
+	 * @throws RecordNotFoundException
+	 */
 
 	@GetMapping
 	@ApiOperation(value = "Get All Employees List")
 	public ResponseEntity<List<Employee>> getAllEmployee(@RequestParam(defaultValue = "0") Integer pageNo, 
 			@RequestParam(defaultValue = "1000", required = false) Integer pageSize,
-			@RequestParam(defaultValue = "id") String sortBy) throws CustomException{
+			@RequestParam(defaultValue = "id") String sortBy) throws RecordNotFoundException{
 		LOGGER.debug("************Inside getAllEmployee... ****" + sortBy);
 		List<Employee> empList = employeeService.getAllEmployee(pageNo, pageSize, sortBy);
 		LOGGER.info("Employee Rsponse=== " + empList.toString());
@@ -75,9 +92,15 @@ public class EmployeeController {
 		}
 	}
 
+	/**
+	 * 
+	 * @param List<Employee> 
+	 * @return Employee List
+	 * @throws CustomException
+	 */
 	@PostMapping
 	@ApiOperation(value = "Creating new Employee/s")
-	public ResponseEntity<List<Employee>> createEmployeeInBulk(@RequestBody List<Employee> emplst) {
+	public ResponseEntity<List<Employee>> createEmployeeInBulk(@RequestBody List<Employee> emplst) throws CustomException{
 		LOGGER.debug("############ Inside createEmployeeInBulk########## " + emplst);
 		List<Employee> emplist = null;
 		emplist = employeeService.createEmployeeInBulk(emplst);
@@ -89,15 +112,27 @@ public class EmployeeController {
 		}
 	}
 
+	/**
+	 * 
+	 * @param employeeId, EMployee Object 
+	 * @return Object
+	 * @throws CustomException
+	 */
 	@PutMapping("/{id}")
 	@ApiOperation(value = "Updating Employee Based on EmployeeID")
 	public ResponseEntity<Object> updateEmployee(@PathVariable("id") int id, @RequestBody Employee emp) throws CustomException {
-		employeeService.UpdateEmployee(emp);
+		employeeService.updateEmployee(emp);
 		LOGGER.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~UPDATED SUCCESSFULLY~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// return new ResponseEntity<Employee>(updated, new HttpHeaders(), HttpStatus.OK);
 		return new ResponseEntity<>("Employee is updated successfully", HttpStatus.OK);
 	}
 
+	/**
+	 * 
+	 * @param employeeId 
+	 * @return Object
+	 * @throws CustomException
+	 */
 	@DeleteMapping("/{id}") 
 	@ApiOperation(value = "Deleting Employee Based on EmployeeID")
 	public ResponseEntity<Object> deleteEmployeeById(@PathVariable int id) throws CustomException {
@@ -138,6 +173,12 @@ public class EmployeeController {
 		Employee updated = employeeService.createEmployee(emp);
 		return new ResponseEntity<Employee>(updated, new HttpHeaders(), HttpStatus.OK);
 	}
+	 */
+	
+	/**
+	 * 
+	 * @return List<Employee>
+	 * @throws CustomException
 	 */
 	@SuppressWarnings("unchecked")
 	@GetMapping("/groupby")

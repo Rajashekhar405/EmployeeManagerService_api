@@ -13,8 +13,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.Exception.CustomException;
+import com.example.demo.Exception.RecordNotFoundException;
 import com.example.demo.entity.Employee;
 import com.example.demo.repository.EmployeeRepository;
+
+
+/**
+ * 
+ * @author Rajashekhar badad
+ * @version 1.0
+ * @since 05-06-2020
+ */
 
 @Service
 public class EmployeeService {
@@ -24,6 +33,12 @@ public class EmployeeService {
 	@Autowired
 	private EmployeeRepository employeeRepository;
 
+	/**
+	 * 
+	 * @param pageNo, pageSize, sortBy
+	 * @return Employee List
+	 * @throws RecordNotFoundException
+	 */
 	public List<Employee> getAllEmployee(Integer pageNo, Integer pageSize, String sortBy) throws CustomException{
 		/*List<Employee> empList = employeeRepository.findAll();
 		if(null!=empList && !empList.isEmpty()) {
@@ -42,7 +57,13 @@ public class EmployeeService {
 			return new ArrayList<Employee>();
 		}
 	}
-
+	
+	/**
+	 * 
+	 * @param employeeId
+	 * @return Employee
+	 * @throws CustomException
+	 */
 	public Employee getEmployeeById(int id) throws CustomException {
 		LOGGER.info("Inside getEmployeeById "+ id);
 		Optional<Employee> emp =  employeeRepository.findById(id);
@@ -50,12 +71,18 @@ public class EmployeeService {
 		return emp.get();
 	}
 
-	public Employee createEmployee(Employee emp) {
+	/*public Employee createEmployee(Employee emp) {
 		Employee emp1 = employeeRepository.save(emp);
 		return emp1;
-	}
+	}*/
 
-	public Employee UpdateEmployee(Employee emp) throws CustomException{
+	/**
+	 * 
+	 * @param employeeId, EMployee Object 
+	 * @return Object
+	 * @throws CustomException
+	 */
+	public Employee updateEmployee(Employee emp) throws CustomException{
 		Optional<Employee> empDetails = employeeRepository.findById(emp.getId());
 		Employee employee = empDetails.get();
 		employee.setDesignation(emp.getDesignation());
@@ -65,6 +92,12 @@ public class EmployeeService {
 		return employeeRepository.save(employee);
 	}
 
+	/**
+	 * 
+	 * @param employeeId
+	 * @return Object
+	 * @throws CustomException
+	 */
 	public Optional<Employee> deleteEmployeeById(int id) throws CustomException {
 		Optional<Employee> emp1 = employeeRepository.findById(id);
 		if(null!=emp1 && emp1.isPresent()) 
@@ -76,20 +109,32 @@ public class EmployeeService {
 		return emp1;
 	}
 
-	public String deleteEmployees() throws CustomException{
+	/*public String deleteEmployees() throws CustomException{
 		try {
 			employeeRepository.deleteAll();
 		} catch (Exception e) {
 			throw new CustomException("While Deleting, Something Went wrong");
 		}
 		return "Deleted All the records";
-	}
+	}*/
 
+	/**
+	 * 
+	 * @param
+	 * @return Generic List
+	 * @throws CustomException
+	 */
 	public List<?> groupByEmployees() throws CustomException {
 		return employeeRepository.groupByEmployees();
 
 	}
 
+	/**
+	 * 
+	 * @param pageNo, pageSize, sortBy
+	 * @return Object
+	 * @throws CustomException
+	 */
 	public List<Employee> getEmployeePerPage(Integer pageNo, Integer pageSize, String sortBy) throws CustomException{
 		PageRequest pageable = PageRequest.of(pageNo, pageSize, Sort.by(sortBy));
 		Page<Employee> pageReslt = employeeRepository.findAll(pageable);
@@ -101,15 +146,27 @@ public class EmployeeService {
 		}
 	}
 
-	public List<Employee> getByEmployeeDesignation(String desig) throws CustomException {
+	/*public List<Employee> getByEmployeeDesignation(String desig) throws CustomException {
 		return employeeRepository.findByDesignation(desig);
-	}
+	}*/
 
+	/**
+	 * 
+	 * @param List<Employee>
+	 * @return Generic List
+	 * @throws CustomException
+	 */
 	public List<Employee> createEmployeeInBulk(List<Employee> emplst){
 		LOGGER.info("Inside createEmployeeInBulk "+emplst.size());
 		return employeeRepository.saveAll(emplst);
 	}
 	
+	/**
+	 * 
+	 * @param searchkey
+	 * @return Generic List
+	 * @throws RecordNotFoundException
+	 */
 	public List<?> findEmployeeDetails(String keyword) {
 		LOGGER.info("Entered search keyword = "+keyword);
 		return employeeRepository.findUsersByKeyword(keyword);
